@@ -1,0 +1,541 @@
+---
+title: "hw2"
+author: "yang an"
+date: "2024-10-20"
+output: html_document
+---
+
+Homework 2
+## question
+
+###1.
+####answer:
+(a) Illustrate a data set 
+```{r, echo=FALSE}
+# Load libraries
+library(ggplot2)
+library(dplyr)
+
+# Define parameters
+set.seed(123)
+subject_id <- sort(rep(1:8, 5))
+time <- rep(1:5, 8)
+
+# Generate intercepts and slopes
+intercepts <- runif(8, 90, 120)
+slopes <- runif(8, 1, 5)
+
+# Define blood pressure range and probabilities
+bp_range <- 90:180
+prob <- c(rep(1 - 0.47, 39), rep(1 - 0.2115, 9), rep(0.2115, 43))
+
+# Generate systolic values
+Systolic <- rep(NA, 40)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  Systolic[idx] <- sample(bp_range, 5, replace = TRUE, prob = prob) +
+                   intercepts[i] + slopes[i] * time[idx] + rnorm(5, 0, 2)
+}
+
+# Create tibble
+bp_data_a <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_a), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Each Subject with Its Own Intercept and Slope") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+
+(b)
+```{r, echo=FALSE}
+# Generate intercepts and positively correlated slopes
+intercepts <- runif(8, 90, 120)
+slopes <- 0.1 * intercepts
+
+# Generate systolic values
+Systolic <- rep(NA, 40)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  Systolic[idx] <- sample(bp_range, 5, replace = TRUE, prob = prob) +
+                   intercepts[i] + slopes[i] * time[idx] + rnorm(5, 0, 2)
+}
+
+# Create tibble
+bp_data_b <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_b), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Higher Intercepts with Higher Slopes") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+
+(c) 
+```{r, echo=FALSE}
+# Generate intercepts and negative slopes
+intercepts <- runif(8, 90, 120)
+slopes <- runif(8, -5, -1)
+
+# Generate systolic values
+Systolic <- rep(NA, 40)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  Systolic[idx] <- sample(bp_range, 5, replace = TRUE, prob = prob) +
+                   intercepts[i] + slopes[i] * time[idx] + rnorm(5, 0, 2)
+}
+
+# Create tibble
+bp_data_c <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_c), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Overall Negative Population Slope") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+
+(d) 
+```{r, echo=FALSE}
+# Increase observations
+n_obs <- 10
+subject_id <- sort(rep(1:8, n_obs))
+time <- rep(1:n_obs, 8)
+
+# Generate intercepts, growth rates, and leveling off values
+intercepts <- runif(8, 60, 80)
+growth_rates <- runif(8, 5, 10)
+level_off <- runif(8, 120, 140)
+
+# Generate systolic values
+Systolic <- rep(NA, 80)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  Systolic[idx] <- ifelse(time[idx] <= 5, 
+                          sample(bp_range, 5, replace = TRUE, prob = prob) + 
+                          intercepts[i] + growth_rates[i] * time[idx],
+                          level_off[i] + rnorm(n_obs, 0, 2))
+}
+
+# Create tibble
+bp_data_d <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_d), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Start Low, Grow High, Then Level Off") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+
+(e) 
+```{r, echo=FALSE}
+# Generate peaks and declines
+peaks <- runif(8, 120, 140)
+declines <- runif(8, 5, 10)
+
+# Generate systolic values
+Systolic <- rep(NA, 40)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  Systolic[idx] <- ifelse(time[idx] <= 3, 
+                          sample(bp_range, 5, replace = TRUE, prob = prob) + 
+                          intercepts[i] + growth_rates[i] * time[idx],
+                          peaks[i] - declines[i] * (time[idx] - 3) + rnorm(5, 0, 2))
+}
+
+# Create tibble
+bp_data_e <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_e), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Start Low, Peak, Then Decline") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+
+(f) 
+```{r, echo=FALSE}
+# Define oscillating trend
+oscillate <- sin(0.5 * time)
+
+Systolic <- rep(NA, 40)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  Systolic[idx] <- sample(bp_range, 5, replace = TRUE, prob = prob) + 
+                   intercepts[i] + 10 * oscillate[idx] + rnorm(5, 0, 2)
+}
+
+# Create tibble
+bp_data_f1 <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_f1), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Oscillating Trend") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+```{r, echo=FALSE}
+# Define sudden drop
+Systolic <- rep(NA, 40)
+for (i in 1:8) {
+  idx <- which(subject_id == i)
+  drop_point <- sample(3:4, 1)
+  Systolic[idx] <- ifelse(time[idx] < drop_point, 
+                          sample(bp_range, 5, replace = TRUE, prob = prob) + 
+                          intercepts[i] + slopes[i] * time[idx], 
+                          intercepts[i] - 30 + rnorm(5, 0, 2))
+}
+
+# Create tibble
+bp_data_f2 <- as_tibble(cbind(subject_id, time, Systolic))
+```
+
+```{r, out.width="75%",fig.align = 'center', echo= FALSE}
+# Plot
+ggplot(na.omit(bp_data_f2), aes(x = time, y = Systolic, group = subject_id, color = factor(subject_id))) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  ggtitle("Sudden Drop") +
+  xlab("Time") +
+  ylab("Systolic Blood Pressure (mmHg)")
+```
+
+sentence: The first pattern shows a sinusoidal oscillation over time, while the second pattern shows an a sudden drop in the data.
+
+
+2.
+Chapter 3, problem 7
+(a) 
+```{r}
+library(dplyr)
+library(readr)
+library(ggplot2)
+
+# Load the weight loss data 
+setwd('/Users/yangan/Desktop/M236/M236-Lab/hw2')
+
+options(scipen = 999)
+
+weight_loss_data_in <- read_tsv("Weight Loss Version1(weekly observations).txt", col_names = TRUE)
+
+weight_loss_data <- weight_loss_data_in[complete.cases(weight_loss_data_in),]
+
+# Calculate slopes for each subject
+slopes <- weight_loss_data %>%
+  group_by(id) %>%
+  summarize(slope = lm(weight ~ week)$coefficients[2])
+
+# Plot the slopes in a histogram
+ggplot(data = slopes) +
+  geom_histogram(aes(x = slope), binwidth = 0.5, fill = "skyblue", color = "black") +
+  theme_bw() +
+  labs(x = "Slope", 
+       y = "Count",
+       title = "Histogram of Slopes")
+
+```
+
+(b) 
+```{r}
+# Calculate the average slope
+mean_slope <- mean(slopes$slope)
+
+# Calculate the standard deviation of the slopes
+sd_slope <- sd(slopes$slope)
+
+mean_slope
+sd_slope
+```
+(c) 
+```{r}
+# Perform a t-test to test if the average slope is equal to zero
+t_test <- t.test(slopes$slope, mu = 0)
+
+t_test
+```
+(d) 
+```{r}
+
+# Select subjects with varying amounts of data
+subject_1 <- filter(weight_loss_data, id == 1)
+subject_2 <- filter(weight_loss_data, id == 2)
+
+# Perform linear regression for each subject
+lm_1 <- lm(weight ~ week, data = subject_1)
+lm_2 <- lm(weight ~ week, data = subject_2)
+
+# Extract standard errors of the slopes
+se_1 <- summary(lm_1)$coefficients[2, 2]
+se_2 <- summary(lm_2)$coefficients[2, 2]
+
+# Compare standard errors
+se_1
+se_2
+
+```
+
+```{r}
+slope_1 <- lm(weight ~ week, data = subject_1)$coefficients[2]
+slope_2 <- lm(weight ~ week, data = subject_2)$coefficients[2]
+
+slope_1
+slope_2
+```
+
+
+```{r}
+# Perform a t-test to test if the average slope is equal to zero
+t_test <- t.test(slopes$slope, mu = 0)
+
+t_test
+```
+
+
+
+There are more fluctuations of weight in subject 1 than in subject 2. The standard errors of the slopes are different for the two subjects, with subject 1 having a higher standard error than subject 2. A t-test assumes that the data is normally distributed and that the variances are similar across observations. The t-test analysis may not be appropriate for comparing this, as the standard errors vary significantly between subjects and there are outliers which affect validity.
+
+(e) 
+
+The slope may not be an appropriate summary of an individual's weight loss because it only captures the rate of change over time and does not account for other factors that may influence weight loss, such as diet, exercise, and metabolism. Additionally, weight loss is not always linear and has some outliers. Other summary measures, such as the total weight loss over a specific period or the percentage of body weight lost, may provide a more comprehensive and accurate summary of an individual's weight loss progress.
+
+3.
+Chapter 3, problem 8
+```{r}
+# Load necessary libraries
+library(dplyr)
+
+# Read the data
+ozone_data_in <- read.table("Ozone data.txt", header = TRUE)
+ozone_data <- ozone_data_in[complete.cases(ozone_data_in),]
+# Group data by 'site' and calculate the first, last ozone values and the difference
+ozone_summary <- ozone_data %>%
+  dplyr::group_by(fullname) %>%
+  dplyr::summarise(first = first(ozone),
+            last = last(ozone),
+            diff = last - first,
+            mean = mean(ozone),
+            range = max(ozone) - min(ozone))
+
+# Print the results
+print(head(ozone_summary, 10))
+
+```
+
+
+The Ozone data could be summarized by a difference di equal to the last observation minus the first observation. However, the difference in ozone levels may not be the best summary measure as it does not account for the overall trend or variability in ozone levels over time. A better summary measure might be the mean ozone level or the range of ozone levels, as these measures provide more information about the central tendency and spread of the data, respectively.
+
+4.
+Problem 2, chapter 4
+
+```{r}
+# Load necessary libraries
+library(tidyr)
+library(dplyr)
+
+# Recreate the dataset in wide format
+data <- data.frame(
+  Subject = 1:20,
+  Week_0 = c(219, 167, 152, 194, 235, 200, 181, 211, 250, 210, 142, 192, 217, 187, 188, 187, 184, 197, 200, 219),
+  Week_2 = c(222, 161, 144, 193, 231, 199, 183, 204, 249, 209, 140, 195, 217, 189, 196, 191, 189, 201, 205, 223),
+  Week_4 = c(221, 165, 144, 193, 235, 195, 177, 210, 247, 209, 143, 193, 220, 189, 194, 187, 184, 200, 205, 225),
+  Week_6 = c(215, 161, 147, 189, 236, 199, 175, 208, 251, 212, 142, 193, 219, 193, 191, 187, 188, 198, 206, 222),
+  Week_8 = c(214, 158, 145, 191, 235, 195, 180, 211, 251, 212, 147, 198, 224, 195, 193, 181, 189, 201, 209, 226),
+  Week_10 = c(211, 159, 146, 189, 231, 197, 180, 211, 250, 213, 144, 201, 226, 202, 191, 179, 189, 204, 210, 231)
+)
+```
+
+```{r}
+# Convert wide format to long format
+data_long = data %>%
+  pivot_longer(cols = starts_with('Week'),
+               names_to = 'Week',
+               values_to = 'Weight') %>%
+  mutate(Week = as.numeric(gsub('Week_', '', Week))) # Extract numerical values from Week names
+
+head(data_long, 10)
+```
+
+(a) 
+```{r}
+# Perform a paired t-test using the weight at week 10 and the baseline weight for all 20 subjects
+week_10 <- data_long %>%
+  filter(Week == 10) %>%
+  select(Weight) %>%
+  pull()
+
+baseline <- data_long %>%
+  filter(Week == 0) %>%
+  select(Weight) %>%
+  pull()
+
+t.test(week_10, baseline, paired = TRUE)
+
+```
+p-value = 0.3255, which is not significant at the 0.05 level. Therefore, we fail to reject the null hypothesis that there is no difference in weight between week 10 and baseline for all 20 subjects.
+
+
+(b) 
+```{r}
+# Filter out subjects with bold observations 
+complete_subjects <- data_long %>% 
+  filter(!(Subject %in% c(11, 12, 13, 14, 15, 16, 17, 18, 19, 20)))
+
+week_10_complete <- complete_subjects %>% 
+  filter(Week == 10) %>% 
+  select(Weight) %>% 
+  pull()
+
+baseline_complete <- complete_subjects %>% 
+  filter(Week == 0) %>% 
+  select(Weight) %>% 
+  pull()
+
+t.test(week_10_complete, baseline_complete, paired = TRUE)
+```
+p_value = 0.02237, which is significant at the 0.05 level. Therefore, we reject the null hypothesis, and conclude that there is a significant difference in weight between week 10 and baseline for the 10 complete observations.
+
+(c) 
+```{r}
+# Use the last regular (non-bold) observation for subjects with at least two observations
+last_observation <- data_long %>%
+  group_by(Subject) %>%
+  filter(n() >= 2) %>%  # Ensure each subject has at least two observations
+  summarize(last_weight = ifelse(any(Weight >= Weight[Week == 0] + 4),
+                                 max(Weight[Week < min(Week[Weight >= Weight[Week == 0] + 4])]), # Last regular weight before bold
+                                 max(Weight[Week == 10]))) # For subjects with no bold, use Week 10
+
+baseline <- data_long %>%
+  filter(Week == 0) %>%
+  select(Subject, Weight) %>%
+  pull()
+
+last_weights <- last_observation$last_weight
+
+# Paired t-test between the last regular observation and baseline (Week 0)
+t.test(last_weights, baseline, paired = TRUE)
+```
+p_value = 0.1476, which is not significant at the 0.05 level. Therefore, we fail to reject the null hypothesis, and conclude that there is no significant difference in weight between the last regular observation and baseline for subjects with at least two observations.
+
+
+(d) 
+```{r}
+# Use the last observation before dropout 
+before_dropout <- data_long %>%
+  group_by(Subject) %>%
+  summarize(last_weight = ifelse(any(Weight >= Weight[Week == 0] + 4),
+                                 max(Weight[Week == max(Week[Weight < Weight[Week == 0] + 4])]), # Last weight before bold (dropout)
+                                 max(Weight[Week == 10]))) # For subjects with no bold, use Week 10
+
+baseline <- data_long %>%
+  filter(Week == 0) %>%
+  select(Subject, Weight) %>%
+  pull()
+
+last_weights_dropout <- before_dropout$last_weight
+
+# Paired t-test between last available observation before dropout and baseline (Week 0)
+t.test(last_weights_dropout, baseline, paired = TRUE)
+```
+p_value = 0.1506, which is not significant at the 0.05 level. Therefore, we fail to reject the null hypothesis, and conclude that there is no significant difference in weight between the last available observation before dropout and baseline for all subjects.
+
+(e) 
+```{r}
+# Compare the conclusions for the four t-tests
+conclusions <- data.frame(
+  Test = c('All 20 subjects', '10 complete observations', 'Last regular observation', 'Last observation before dropout'),
+  p_value = c(0.3255, 0.02237, 0.1476, 0.1506),
+  Conclusion = c('Fail to reject H0', 'Reject H0', 'Fail to reject H0', 'Fail to reject H0')
+)
+
+conclusions
+
+# Determine overall diet effectiveness
+diet_effectiveness <- ifelse(any(conclusions$Conclusion == 'Reject H0'), 'Partially Effective', 'Not Effective')
+diet_effectiveness
+
+# Naive researcher's conclusion
+naive_researcher <- ifelse(conclusions$Conclusion[2] == 'Reject H0', 'Reject H0', 'Fail to reject H0')
+naive_researcher
+
+# Moral of the analysis
+moral <- 'The conclusions depend on the subset of data used. It is critical to consider how dropout or missing data affects the results, as excluding these observations can create selection bias and lead to misleading interpretations.'
+moral
+
+```
+For the subjects of  weeks 10 and baseline, the p value is 0.3255>0.05, which is not significant at the 0.05 level. Therefore, we fail to reject the null hypothesis and conclude that there is no difference in weight between week 10 and baseline for all 20 subjects. For the 10 complete observations, the p value is 0.02237<0.05, which is significant at the 0.05 level. Therefore, we reject the null hypothesis and conclude that there is a significant difference in weight between week 10 and baseline for the 10 complete observations. For subjects with at least two observations, the p value is 0.1476>0.05, which is not significant at the 0.05 level. Therefore, we fail to reject the null hypothesis and conclude that there is no significant difference in weight between the last regular observation and baseline for subjects with at least two observations. For subjects who drop out just after the boldface observation, the p value is 0.1506>0.05, which is not significant at the 0.05 level. Therefore, we fail to reject the null hypothesis and conclude that there is no significant difference in weight between the last available observation before dropout and baseline for all subjects. The diet is effective based on the 10 complete observations, but not effective based on the last regular observation and last available observation before dropout. As a result, we can conclude that the diet is effective for those subjects who complete the study, but it could also be biased because those who drop out was excluded from the analysis. For the overall conclusion, the diet is not consistently effective across all analyses.
+A naive researcher might conclude that the diet is effective based on the 10 complete observations, but this conclusion would be misleading given the results from the other analyses. The moral of the analyses is that the conclusions drawn from the analyses depend on the subset of data usred for the analysis. It is important to consider the reasons for missing data and how they may affect the results and conclusions of the study.
+
+(f) 
+```{r}
+# Compare the last observation before dropout to Week 10 observation for each subject
+comparison <- data_long %>%
+  group_by(Subject) %>%
+  # Identify the last weight before dropout (first bold observation)
+  summarize(
+    week_10 = max(Weight[Week == 10]),
+    last_weight_before_dropout = ifelse(any(Weight >= Weight[Week == 0] + 4),
+                                        max(Weight[Week < min(Week[Weight >= Weight[Week == 0] + 4])]), # Last weight before bold
+                                        max(Weight[Week == 10])) # For subjects with no bold, use Week 10
+  )
+
+# Filter only subjects with bold observations (those who "dropped out")
+dropout_subjects <- comparison %>%
+  filter(week_10 != last_weight_before_dropout)
+
+# Extract Week 10 and last observation before dropout
+week_10_values <- dropout_subjects$week_10
+last_before_dropout_values <- dropout_subjects$last_weight_before_dropout
+
+# Paired t-test between Week 10 and the last observation before dropout
+t_test_f <- t.test(week_10_values, last_before_dropout_values, paired = TRUE)
+t_test_f
+
+# Add a comparison column to see if Week 10 is always higher than the last weight before dropout
+comparison <- comparison %>%
+  mutate(is_week_10_higher = week_10 > last_weight_before_dropout)
+
+comparison
+```
+The P_value is 0.01847, which is significant at the 0.05 level. Therefore, we reject the null hypothesis and conclude that there is a significant difference in weight between Week 10 and the last observation before dropout for subjects who drop out. The 10-week observation is not always higher than the last observation before dropout for subjects who drop out. 
+
+(g) 
+
+the DoD design is more robust to missing data and dropouts than the single sample paired t-test. In this example, the single sample paired t-test would not be able to handle the missing data from subjects who drop out, as it requires complete data for all subjects. The DoD design, on the other hand, allows for the analysis of subjects with incomplete data by comparing the last available observation before dropout to the baseline observation. This provides a more comprehensive analysis of the data and allows for a more accurate assessment of the effectiveness of the diet. Therefore, the DoD design is a more flexible and robust approach to handling missing data and dropouts in longitudinal studies.
+
