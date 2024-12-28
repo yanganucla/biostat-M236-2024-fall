@@ -1,0 +1,350 @@
+---
+title: "hw3"
+author: "yang an"
+date: "`r Sys.Date()`"
+output: html_document
+---
+## question
+####answer:
+###1.
+#####(a)
+```{r}
+
+# Load the data 
+setwd('/Users/yangan/Desktop/M236/M236-Lab/hw3')
+
+options(scipen = 999)
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Load the Dental data
+dental_data <- read.table("Dental.txt", header = TRUE, sep = "\t")
+```
+
+```{r, out.wide = "75%", fig.align = "center"}
+# 1(a) Profile Plot
+ggplot(na.omit(dental_data), aes(x = age, y = distance, group = id, color = factor(gender, levels = c("Girl", "Boy")))) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = c("Girl" = "#FF69B4", "Boy" = "#1E90FF")) +
+  theme_classic() + 
+  ggtitle("Profile Plot of Dental Measurements for Each Subject") +
+  xlab("Age (Years)") +
+  ylab("Distance (mm)")
+
+```
+#####(b)
+
+The overall pattern of the data is that both boys and girls have an increasing trend with age increasing. The difference is that boys have a higher distance than girls in general.
+#####(c)
+
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(tidyr)
+library(GGally)
+
+# Pivot the data for correlation calculation
+dental_wide <- dental_data %>%
+  pivot_wider(names_from = age, values_from = distance) %>%
+  select(-id)
+
+# Calculate the correlation matrix
+cor_matrix <- cor(dental_wide %>% select(-gender), use = "complete.obs")
+print("Correlation matrix among observations at different ages:")
+print(cor_matrix)
+
+# Scatterplot Matrix
+ggpairs(dental_wide, columns = 1:6, aes(color = gender)) +
+  labs(title = "Scatterplot Matrix of Dental Measurements") +
+  theme_minimal()
+```
+#####(d)
+(d) 
+1.higher consistency in growth for girls: the correlation between the measurements at different ages for girls are higher than boys, especially at older ages. This suggests the dental growth patterns for girls are more consistent across ages, implying a more predictable growth trajectory.
+
+2.gender difference in variability: the scatterplot matrix shows that the variability is higher for boys than girls. The boy data points are more spread out, indicating a higher variability in dental measurements, which suggests that there are more individual differences among boys in terms of dental growth.
+
+3.strong correlation at older ages: the correlation between measurements at older ages (12 and 14) is higher than at younger ages (8 and 10), indicating a stronger relationship between dental measurements at older ages. This suggests that the dental growth patterns are more stable and predictable at older ages.
+
+4.Non-significant correlation: the correlation for boys between measurements at age 8 and 10 is not significant, indicating that there are more random variations in growth patterns among boys at younger ages. 
+                                                       
+#####(e)                                                       
+(e) 
+```{r}
+# Empirical summary: mean and standard deviation by age and gender
+empirical_summary <- dental_data %>%
+  group_by(age, gender) %>%
+  summarise(mean = mean(distance), sd = sd(distance), .groups = 'drop')
+empirical_summary
+```
+
+```{r, out.wide = "75%", fig.align = "center"}
+# Overall Empirical Summary Plot
+ggplot(empirical_summary, aes(x = age, y = mean, color = gender, group = gender)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  labs(title = "Empirical Summary Plot of Dental Measurements by Gender",
+       x = "Age (Years)", y = "Mean Distance (mm)") +
+  theme_minimal()
+
+
+```
+####f
+(f) 
+```{r, out.wide = "75%", fig.align = "center", echo=FALSE}
+# Empirical Summary Plot with Separate Summaries for Boys and Girls
+ggplot(empirical_summary, aes(x = age, y = mean, color = gender, group = gender)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  labs(title = "Separate Empirical Summary Plot for Boys and Girls",
+       x = "Age (Years)", y = "Mean Distance (mm)") +
+  theme_minimal()
+```
+difference in level: Yes, there is a difference, boys have higher level of mean distance at all ages.
+difference in slope: Yes, there is a difference, boys are steeper than girls, indicating a faster growth.
+####g
+(g) 
+```{r}
+# Calculate within-subject residuals
+residuals_data <- dental_data %>%
+  group_by(id) %>%
+  mutate(mean_distance = mean(distance),
+         residual = distance - mean_distance)
+residuals_data
+```
+
+```{r, out.wide = "75%", fig.align = "center"}
+# Profile Plot of Residuals
+ggplot(residuals_data, aes(x = age, y = residual, group = id, color = gender)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Profile Plot of Empirical Within-Subject Residuals",
+       x = "Age (Years)", y = "Residual (mm)") +
+  theme_minimal()
+```
+
+Within-subject residuals: the growth is generally consistent across ages for most subjects, with the residuals centered around zero. However, there are some subjects with larger residuals, indicating that the mean distance may not be a good estimate for those individuals. This suggests that there may be some individual differences in dental growth patterns that are not captured by the mean distance.
+Increasing residuals: the residuals tend to increase with age, indicating that the variability in dental measurements increases with age. This suggests that there may be more individual differences in dental growth patterns at older ages, leading to larger residuals.
+####h
+(h) 
+1.Boys have higher level of mean distance at all ages.
+2.Boys also have a steeper slope, indicating a faster growth.
+3.Boys have higher variability in dental measurements.
+4.The dental growth patterns become more consistent and predictable at older ages, especially for girls.
+###2
+####a
+(a) 
+```{r}
+# Calculate averages for each child
+child_averages <- dental_data %>%
+  group_by(id, gender) %>%
+  summarise(mean_distance = mean(distance), .groups = 'drop')
+
+# T-test for differences in averages between boys and girls
+t_test_avg <- t.test(mean_distance ~ gender, data = child_averages)
+print(t_test_avg)
+```
+This is the result of t-test. 
+```{r, out.wide = "75%", fig.align = "center"}
+ggplot(child_averages, aes(x = gender, y = mean_distance, fill = gender)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.6, color = "black") +  # Add jittered points for individual observations
+  labs(
+    title = "Distribution of Average Distance per Child by Gender",
+    subtitle = paste("T-test p-value:", signif(t_test_avg$p.value, 3)),
+    x = "Gender",
+    y = "Average Distance (mm)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove legend for gender since it's clear from x-axis
+
+```
+This is the box plot. The data appears to be normally distributed, with a clear difference between the groups. Boys tend to have higher values compared to girls.
+
+
+####b
+(b) 
+```{r}
+# Calculate slopes for each child
+slopes <- dental_data %>%
+  group_by(id, gender) %>%
+  summarise(slope = coef(lm(distance ~ age))[2], .groups = 'drop')
+
+# T-test for differences in slopes between boys and girls
+t_test_slope <- t.test(slope ~ gender, data = slopes)
+print(t_test_slope)
+```
+This is the result of t-test.
+```{r, out.wide = "75%", fig.align = "center"}
+# Plot slopes per child
+ggplot(slopes, aes(x = gender, y = slope, color = gender)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, height = 0) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, color = "black") +  # Mean point
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = 0.2, color = "black") +  # Confidence intervals
+  labs(title = "Slopes of Distance Growth per Child by Gender", 
+       subtitle = paste("p-value =", round(t_test_slope$p.value, 4)),
+       x = "Gender", y = "Slope of Growth (mm/year)") +
+  theme_minimal()
+
+
+```
+This is the box plot. The distributions are relatively close, but there is a noticeable difference between the groups. Boys tend to have a higher slope compared to girls.
+####c
+(c) 
+```{r}
+library(car) 
+
+# Calculate the average distance for each child
+avg_data <- dental_data %>%
+  group_by(id, gender) %>%
+  summarise(avg_distance = mean(distance), .groups = 'drop')
+
+# Calculate the slope of distance over age for each child
+slope_data <- dental_data %>%
+  group_by(id, gender) %>%
+  summarise(slope = coef(lm(distance ~ age))[2], .groups = 'drop')
+```
+
+```{r}
+# Levene's Test for equality of variances for averages
+levene_avg <- leveneTest(avg_distance ~ gender, data = avg_data)
+print(levene_avg)
+```
+
+```{r}
+# Levene's Test for equality of variances for slopes
+levene_slope <- leveneTest(slope ~ gender, data = slope_data)
+
+print(levene_slope)
+```
+The diviation is not significantly different for average and slope.
+For the averages, the p-value = 0.7454, indicating no significant difference in variance between boys and girls. For the slope, the p-value = 0.3155, also indicating no significant difference in variance for slopes between genders.
+#####iii
+```{r}
+# Load necessary library
+library(ggplot2)
+
+# Profile plot distinguishing boys and girls
+ggplot(dental_data, aes(x = age, y = distance, group = id, color = gender)) +
+  geom_line(alpha = 0.7) +  
+  labs(title = "Profile Plot of Distance Over Age by Gender",
+       x = "Age",
+       y = "Distance (mm)",
+       color = "Gender") +
+  theme_minimal()
+```
+For this new plot, the boy and girl lines are parallel to each other, indicating that the diviation are similar.
+#####iv
+```{r}
+# Calculate within-subject residuals
+residual_data <- dental_data %>%
+  group_by(id) %>%
+  mutate(mean_distance = mean(distance),  # Calculate subject's mean distance
+         residual = distance - mean_distance) %>%  # Calculate residuals
+  ungroup()
+
+# Profile plot of within-subject residuals by gender
+ggplot(residual_data, aes(x = age, y = residual, group = id, color = gender)) +
+  geom_line(alpha = 0.6) +  
+  labs(title = "Profile Plot of Within-Subject Residuals by Age and Gender",
+       x = "Age",
+       y = "Residual(Observed - Mean Distance)",
+       color = "Gender") +
+  theme_minimal()
+```
+The lines of girl are more gathered, while boys are more spread out. It suggesting slightly larger variability for boys in residual growth.
+
+####d
+(d) 
+
+```{r}
+# Calculate intercept and slope for each child
+intercept_slope_data <- dental_data %>%
+  group_by(id, gender) %>%
+  summarise(
+    intercept = coef(lm(distance ~ age))[1],
+    slope = coef(lm(distance ~ age))[2],
+    .groups = 'drop')
+
+```
+
+```{r, out.wide = "75%", fig.align = "center"}
+# Scatterplot of intercepts vs. slopes
+ggplot(intercept_slope_data, aes(x = intercept, y = slope, color = gender)) +
+  geom_point() +
+  labs(title = "Scatterplot of Intercepts and Slopes by Gender", 
+       x = "Intercept (Baseline Distance at Age 0)", y = "Slope (Growth Rate of Distance per Year)")+
+  theme_minimal()
+```
+The points in the scatterplotare distributed on two sides of an invisible line.
+####e
+(e) 
+Graphical Analysis (Section 1)
+Profile Plot (1a):
+
+What we learn: Individual growth trajectories by age for boys and girls, showing that boys tend to have higher measurements and steeper growth rates.
+Learned only from graphical analysis.
+Overall Pattern (1b):
+
+What we learn: Boys generally have larger distances compared to girls, with both groups showing an upward trend over time.
+Learned from both analyses.
+Correlation and Scatterplot Matrix (1c, 1d):
+
+What we learn: Correlations between observations at different ages and visual patterns distinguishing boys and girls.
+Learned only from graphical analysis.
+Empirical Summary Plot (1e, 1f):
+
+What we learn: Boys exhibit higher levels and steeper slopes compared to girls, as shown by separate summary plots.
+Learned from both analyses.
+Residual Profile Plot (1g):
+
+What we learn: Variability within individual subjects and whether boys or girls show systematic deviations from group means.
+Learned only from graphical analysis.
+Key Inferences (1h):
+
+What we learn: Graphical analysis captures differences in levels, slopes, within-subject variability, and overall trends.
+Learned only from graphical analysis.
+Data Summaries (Section 2)
+Child Averages (2a):
+
+What we learn: Statistical comparison (t-test) shows boys have significantly larger average distances than girls.
+Learned only from data summaries.
+Slopes by Gender (2b):
+
+What we learn: Boys have significantly steeper slopes (growth rates) compared to girls.
+Learned from both analyses.
+Variances by Gender (2c):
+
+What we learn: Variability in averages and slopes is similar between boys and girls, as assessed by formal tests (e.g., Levene's test).
+Learned only from data summaries.
+Intercepts and Slopes (2d):
+
+What we learn: Scatterplot analysis highlights a relationship between baseline levels (intercepts) and growth rates (slopes), with boys generally starting higher and growing faster.
+Learned from both analyses.
+Comparison of the Two Analyses (2e)
+Trends and Individual Variation:
+
+Graphical Analysis: Captures individual growth trajectories, residuals, and overall trends.
+Data Summaries: Provides quantitative summaries of these trends.
+Statistical Inference:
+
+Graphical Analysis: Shows patterns visually but lacks formal statistical testing.
+Data Summaries: Provides statistical significance through t-tests and p-values.
+Key Relationships:
+
+Graphical Analysis: Highlights relationships between variables visually (e.g., scatterplots).
+Data Summaries: Quantifies these relationships (e.g., correlation coefficients, slopes).
+Overall Findings:
+
+Graphical Analysis: Richer visual exploration, useful for identifying patterns, variability, and potential outliers.
+Data Summaries: Provides formal inference, supporting conclusions with statistical rigor.
+Both methods are complementary: graphical analysis is better for exploring patterns and variability, while data summaries provide statistical support and quantitative conclusions.
+
+
