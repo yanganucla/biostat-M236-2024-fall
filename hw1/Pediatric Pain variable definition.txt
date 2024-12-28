@@ -1,0 +1,12 @@
+Variable names for the bivariate pain data set.  
+tol11 tol12 tol13 and tol14 are the pain tolerances, measured in seconds for 4 trials.
+rat11 rat12 rat13 and rat14 are the pain ratings for 4 trials.  
+ses is socio-economic status on an unknown scale
+age_years, age_months are self-explanatory.  
+tmt0 is treatment group 1=attend 2=distract 3=none
+cs0 is coping style  1=attend 2=distract
+gender 2=female, 1=male
+Other variables should be yes/no or 1-5 type questions whose exact definitions have
+been lost in the mists of time.  
+
+id  ses  age_years age_months gender tmt0 cs0 helpful  easy tol11 tol12 rat11 rat12 tol13 tol14 rat13 rat14 senscat1 cpantic1

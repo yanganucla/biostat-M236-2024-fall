@@ -1,0 +1,536 @@
+---
+title: "hw1"
+author: "yang an"
+date: "2024-10-17"
+output: html_document
+---
+## question
+
+###1.
+Five articles are provided on the book author’s web site (https://robweiss.faculty.biostat.ucla.edu/biostat236)
+
+####(1)Counsell et al 2007
+
+(a) Does this article analyze longitudinally collected data?
+Yes, this study follows participants over a 2-year period.
+
+(b) How many repeated measurements were taken over time?
+5 times,the study includes assessments at baseline and follow-up assessments at 
+6, 12, 18, and 24 months.
+
+(c) When were they taken, measuring from baseline?
+Measurements were taken at 6, 12, 18, and 24 months from the baseline.
+
+(d) longitudinal analysis?
+Yes, the authors used a longitudinal analysis to track changes over time.
+
+(e) analysis name?
+The authors used mixed-effects regression models to assess the intervention 
+effect on outcomes.
+
+(f) Name two key responses.
+The Medical Outcomes Study 36-Item Short-Form Health Survey (SF-36) scales; 
+Activities of daily living (ADLs).
+
+(g) What covariates were used?
+Covariates included age, gender, comorbidities, and baseline health status.
+
+(h) What software was used?
+The study used SAS software version 9.1.
+
+####(2)HLP working group 2007
+
+(a) Does this article analyze longitudinally collected data?
+Yes, this study followed participants over a period of 25 months.
+
+(b) How many repeated measurements were taken over time?
+6 times, five measurements were taken at 5, 10, 15, 20, and 25 months 
+after randomization.
+
+(c) When were they taken, measuring from baseline?
+The measurements were taken at 5-month intervals starting from baseline.
+
+(d) longitudinal analysis?
+Yes, the authors used longitudinal methods.
+
+(e) analysis name?
+A random effects Poisson regression model was used in an intention-to-
+treat analysis.
+
+(f) Name two key responses.
+
+Transmission risk (number of unprotected sexual acts).
+Psychological coping and quality of life.
+(g) What covariates were used?
+Covariates included age, gender, city, race, education, employment status and so on.
+
+(h) What software was used?
+Authors used the SAS GLIMMIX28 macro (SAS Institute,
+Cary, NC) to fit the random effects models, PROC LOGISTIC
+(SAS Institute, Cary, NC) to estimate propensity scores, and
+PROC MIANALYZE (SAS Institute, Cary, NC) to compute
+the significance levels combined across the 4 imputed data sets.
+
+####(3)Ponsford et al 2014
+
+(a) Does this article analyze longitudinally collected data?
+Yes, this study tracks patients with traumatic brain injury over a period of 10 years.
+
+(b) How many repeated measurements were taken over time?
+4times, three measurements were taken at 2, 5, and 10 years post-injury.
+
+(c) When were they taken, measuring from baseline?
+Measurements were taken at 2, 5, and 10 years from the baseline (the time of injury).
+
+(d) longitudinal analysis?
+Yes, the authors employed longitudinal analysis.
+
+(e) analysis name?
+Cochran’s Q test analysis. 
+Glasgow Outcome Scale-Extended (GOSE).
+
+(f) Name two key responses.
+
+Mobility.
+Cognition, behavior, emotion, and communication.
+
+(g) What covariates were used?
+Covariates included injury severity, age at injury, and other demographic factors.
+
+(h) What software was used?
+SPSS v20.0.
+
+####(4)Rabiolo et al 2020
+(a) Does this article analyze longitudinally collected data?
+Yes, this study follows patients with glaucoma over a period of at least 2 years.
+
+(b) How many repeated measurements were taken over time?
+At least five OCT images and visual field tests were taken during the follow-up period.
+
+(c) When were they taken, measuring from baseline?
+Measurements were taken over a 4.5-year median follow-up period.
+
+(d) longitudinal analysis?
+Yes, the study used longitudinal analysis to track disease progression.
+
+(e) analysis name?
+Linear regression models were used. Pairwise
+differences among the measures of interest were tested
+with Tukey test.
+
+(f) Name two key responses.
+Full macular thickness (FMT).
+Ganglion cell complex (GCC) thickness.
+
+(g) What covariates were used?
+Covariates included age, baseline visual field damage, and baseline thickness of retinal layers.
+
+(h) What software was used?
+Automated segmentation of individual retinal
+layers was performed with the Glaucoma Module
+Premium Edition software before data export.
+The study used Heidelberg Engineering software for OCT analysis​
+
+####(5) Li et al 2021
+(a) Does this article analyze longitudinally collected data?
+Yes, this study uses weekly COVID-19 data at the county level in the United States.
+
+(b) How many repeated measurements were taken over time?
+40 repeated weekly measurements per county were used in the analysis.
+
+(c) When were they taken, measuring from baseline?
+Weekly data were collected from March 2020 through December 2020.
+
+(d) longitudinal analysis?
+Yes, the authors used generalized linear mixed models to analyze the data.
+
+(e) analysis name?
+Generalized linear mixed models (GLMM) were used for both cumulative and weekly case and death rates.
+
+(f) Name two key responses.
+
+COVID-19 case rates.
+COVID-19 death rates.
+
+(g) What covariates were used?
+Covariates included socioeconomic disadvantage, comorbidities, and Metro/Non-Metro classification.
+
+(h) What software was used?
+The analysis was conducted using R.
+
+###2.
+Problem 12, chapter 1, page 26.
+
+answers:
+(a) Balanced with no missing data
+(b) Balanced with missing data
+(c) balanced with missing data
+(d) Balanced with missing data
+(e) unbalanced, has random times 
+(f) Balanced with missing data
+
+```{r }
+library(GGally)
+library(tidyverse)
+library(Rmisc)
+```
+
+```{r}
+
+setwd('/Users/yangan/Desktop/M236/M236-Lab/')
+
+options(scipen = 999)
+
+
+# Use read.table and specify the correct separator
+small_mice <- read.table("smallmice.txt", header = TRUE, sep = "\t")  # For tab-separated
+big_mice <- read.table("bigmice.txt", header = TRUE, sep = "\t")
+pediatric_pain <- read.table("Pediatric Pain long format.txt", header = TRUE, sep = "\t")
+weight_loss <- read.table("Weight Loss Version1(weekly observations).txt", header = TRUE, sep = "\t")
+bsi_total <- read.table("BSI Total.txt", header = TRUE, sep = "\t")
+cognitive <- read.table("Cognitive.txt", header = TRUE, sep = "\t")
+
+```
+
+```{r}
+
+# Print the first few rows of each dataset to explore
+head(small_mice)
+head(big_mice)
+head(pediatric_pain)
+head(weight_loss)
+head(bsi_total)
+head(cognitive)
+
+```
+
+```{r}
+
+# Check if all the IDs have the same number of measurements(var-freq)
+table(small_mice$id)
+table(big_mice$id)
+table(pediatric_pain$id)
+table(weight_loss$id)
+table(bsi_total$pid)
+table(cognitive$id)
+
+```
+
+
+```{r}
+# Check missingness in each dataset
+sum(is.na(small_mice))
+sum(is.na(big_mice))
+sum(is.na(pediatric_pain))
+sum(is.na(weight_loss))
+sum(is.na(bsi_total))
+sum(is.na(cognitive))
+
+```
+
+
+###3.
+
+```{r, echo=FALSE}
+# Load the data
+anthropometry <- read.table("Anthropometry 2.txt", header = TRUE, sep = "\t")
+
+# the first few rows of the dataset
+head(anthropometry)
+```
+(a) the earliest time
+
+```{r, echo=FALSE}
+# Convert time from years to days
+anthropometry$time_days <- anthropometry$time * 365.25
+
+# the earliest time of any measurement
+earliest_time <- min(anthropometry$time_days, na.rm = TRUE)
+
+cat("Earliest time (in days):", earliest_time, "\n")
+
+```
+the earliest time of any measurement is -60.
+
+(b) the latest time
+
+```{r}
+# the latest time of any measurement
+latest_time <- max(anthropometry$time_days, na.rm = TRUE)
+cat("Latest time (in days):", latest_time, "\n")
+```
+(c) the nominal times 
+the nominal time is below:
+```{r, echo=FALSE}
+# Group by ID and calculate the average time for each group, while keeping all observations
+library(dplyr)
+# Group by ID and calculate the nominal time for each group
+anthropometry <- anthropometry %>%
+  dplyr::group_by(ID) %>%
+  dplyr::mutate(obs = row_number()) %>%
+  ungroup() %>%
+  group_by(obs) %>%
+  dplyr::mutate(nominal_time = mean(time_days, na.rm = TRUE)) %>%
+  ungroup()  # This ensures the dataset is no longer grouped by ID after the operation
+
+# View the updated dataframe
+print(anthropometry)
+
+# save the nominal time as a separate variable 
+nominal_times <- anthropometry %>% 
+  dplyr::select(obs, nominal_time) %>% 
+  distinct() 
+  
+# Print the distinct nominal times for each ID
+print(nominal_times)
+
+
+```
+
+```{r, echo=FALSE}
+
+plot(anthropometry$time_days)
+plot(anthropometry$time_days[anthropometry$time_days < 365.25])
+plot(anthropometry$time_days[anthropometry$time_days > 365.25 & anthropometry$time_days <= 730.5])
+
+```
+For the first year, it seems that the data was collected every 30 days. For the second year, the data was collected every 50 or 60 days. It is a little bit more spread out. In conclusion, the frequency of observations changes over time, and first-year data is collected more frequently than second-year data.
+
+
+
+(d) subjects number 
+
+```{r, echo=FALSE}
+
+# Number of subjects with observations within 2 days
+subjects_within_2_days <- anthropometry %>%
+  filter(time_days > 0 & time_days <= 2) %>%
+  distinct(ID) %>%
+  nrow()
+
+# Number of subjects with observations within 10 days
+subjects_within_10_days <- anthropometry %>%
+  filter(time_days > 0 & time_days <= 10) %>%
+  distinct(ID) %>%
+  nrow()
+
+# Number of subjects with observations within 20 days
+subjects_within_20_days <- anthropometry %>%
+  filter(time_days > 0 & time_days <= 20) %>%
+  distinct(ID) %>%
+  nrow()
+
+
+```
+Subjects with observations within 2 days: 0 
+Subjects with observations within 10 days: 133 
+Subjects with observations within 20 days: 350 
+there are 0 subjects with observations within 2 days, 133 subjects with observations within 10 days, and 350 subjects with observations within 20 days.
+
+(e) impact 
+
+```{r, echo=FALSE}
+# Filter data for before and after 20 days
+before_20_days <- anthropometry %>% filter(time_days <= 20)
+after_20_days <- anthropometry %>% filter(time_days > 20)
+
+# Calculate mean height and weight before and after 20 days
+mean_height_before_20 <- mean(before_20_days$height, na.rm = TRUE)
+mean_weight_before_20 <- mean(before_20_days$weight, na.rm = TRUE)
+mean_height_after_20 <- mean(after_20_days$height, na.rm = TRUE)
+mean_weight_after_20 <- mean(after_20_days$weight, na.rm = TRUE)
+
+# Calculate trends in height and weight
+height_trend <- mean_height_after_20 - mean_height_before_20
+weight_trend <- mean_weight_after_20 - mean_weight_before_20
+
+
+cat("Mean height before 20 days:", mean_height_before_20, "\n")
+cat("Mean height after 20 days:", mean_height_after_20, "\n")
+cat("Height trend:", height_trend, "\n")
+cat("Mean weight before 20 days:", mean_weight_before_20, "\n")
+cat("Mean weight after 20 days:", mean_weight_after_20, "\n")
+cat("Weight trend:", weight_trend, "\n")
+```
+
+```{r, echo=FALSE}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+
+# Analyze growth trends over time by plotting height and weight before and after 20 days
+
+# Separate data before and after 20 days for comparison
+before_20_days <- anthropometry %>% filter(time_days <= 20)
+after_20_days <- anthropometry %>% filter(time_days > 20)
+
+# Plot height over time
+ggplot(anthropometry, aes(x = time_days, y = height, color = time_days > 20)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(title = "Height Trend Over Time",
+       x = "Time (days)",
+       y = "Height (cm)") +
+  scale_color_manual(values = c("blue", "red"), labels = c("Before 20 days", "After 20 days")) +
+  theme_minimal()
+
+# Plot weight over time
+ggplot(anthropometry, aes(x = time_days, y = weight, color = time_days > 20)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(title = "Weight Trend Over Time",
+       x = "Time (days)",
+       y = "Weight (kg)") +
+  scale_color_manual(values = c("blue", "red"), labels = c("Before 20 days", "After 20 days")) +
+  theme_minimal()
+
+# Statistical analysis: t-test to see if the mean difference before and after 20 days is significant
+
+# Height t-test
+height_ttest <- t.test(before_20_days$height, after_20_days$height, alternative = "two.sided", na.rm = TRUE)
+height_ttest
+
+# Weight t-test
+weight_ttest <- t.test(before_20_days$weight, after_20_days$weight, alternative = "two.sided", na.rm = TRUE)
+weight_ttest
+```
+Mean height before 20 days is 115.7216, Mean height after 20 days is 122.3249, Height trend is 6.603292, Mean weight before 20 days is 20.13963, Mean weight after 20 days is 22.18967,Weight trend is 2.050035. Both height and weight have increased over time. The p-value for both height and weight is less than 0.05, which indicates that the mean difference before and after 20 days is statistically significant. This suggests that there is a significant impact on height and weight over time in the dataset. However, the plots show that the trends are natural gradual changes rather than sudden shifts. As a result, the impact may be due to normal growth and development rather than an treatment effect. Further analysis and context would be needed to determine the cause of these trends.
+
+
+(f) weight outcome measure
+
+```{r}
+# Explore the actual times of weight observations
+ggplot(anthropometry, aes(x = time_days, y = weight)) + 
+  geom_point() + 
+  labs(title = "Weight Observations Over Time", 
+       x = "Time (days)", 
+       y = "Weight") + 
+  theme_minimal()
+
+# Check unique observation times for weight
+unique_times_weight <- anthropometry %>%
+  filter(!is.na(weight)) %>%
+  arrange(time_days) %>%
+  select(time_days) %>%
+  distinct()
+
+cat("Unique times of weight observations (in days):", unique_times_weight$time_days, "\n")
+```
+
+```{r}
+# Count weight observations in the first year (within 365.25 days)
+first_year_weight <- anthropometry %>%
+  filter(time_days <= 365.25, !is.na(weight)) %>%
+  dplyr::summarise(first_year_count = dplyr::n())
+
+# Print the result
+cat("First year weight observations:", first_year_weight$first_year_count, "\n")
+```
+
+```{r}
+
+# Count weight observations in the second year (between 365.25 and 730.5 days)
+second_year_weight <- anthropometry %>%
+  filter(time_days > 365.25 & time_days <= 730.5, !is.na(weight)) %>%
+  dplyr::summarise(second_year_count = dplyr::n())
+
+# Print the result
+cat("Second year weight observations:", second_year_weight$second_year_count, "\n")
+
+```
+
+
+
+There has a pattern in the times of weight observations, which is clustered every few hundred days, with a few exceptions.
+Observations are taken every 10 days in the first year and every month in the second year.
+The frequency is not the same in the first and second year, almost double observations in the first year compared to the second year.
+
+
+(g) height outcome
+
+```{r}
+# Explore the actual times of height observations
+ggplot(anthropometry, aes(x = time_days, y = height)) + 
+  geom_point() + 
+  labs(title = "Height Observations Over Time", 
+       x = "Time (days)", 
+       y = "Height") + 
+  theme_minimal()
+
+# Check unique observation times for height
+unique_times_height <- anthropometry %>%
+  filter(!is.na(height)) %>%
+  arrange(time_days) %>%
+  select(time_days) %>%
+  distinct()
+
+cat("Unique times of height observations (in days):", unique_times_height$time_days, "\n")
+```
+
+```{r}
+# Count height observations in the first year (within 365.25 days)
+first_year_height <- anthropometry %>%
+  filter(time_days <= 365.25, !is.na(height)) %>%
+  dplyr::summarise(first_year_count = dplyr::n())
+
+# Print the result
+cat("First year height observations:", first_year_height$first_year_count, "\n")
+```
+
+```{r}
+
+# Count height observations in the second year (between 365.25 and 730.5 days)
+second_year_height <- anthropometry %>%
+  filter(time_days > 365.25 & time_days <= 730.5, !is.na(height)) %>%
+  dplyr::summarise(second_year_count = dplyr::n())
+
+# Print the result
+cat("Second year height observations:", second_year_height$second_year_count, "\n")
+
+```
+
+There has a pattern in the times of height observations, which is taken approximately every three months.
+Observations are taken at regular intervals, every 100 days.
+The frequency is not the same in the first and second year, the number of observations in the first year (1936) is higher than in the second year (1355), suggesting that height measurements were less frequent during the second year.
+
+(h)the frequencies 
+
+```{r}
+# Compare observations by year (first year vs second year)
+
+# First year height observations (<= 365.25 days)
+height_first_year <- anthropometry %>%
+  filter(time_days <= 365.25, !is.na(height)) %>%
+  dplyr::summarise(first_year_height = dplyr::n())
+
+# Second year height observations (> 365.25 days & <= 730.5 days)
+height_second_year <- anthropometry %>%
+  filter(time_days > 365.25 & time_days <= 730.5, !is.na(height)) %>%
+  dplyr::summarise(second_year_height = dplyr::n())
+
+# First year weight observations (<= 365.25 days)
+weight_first_year <- anthropometry %>%
+  filter(time_days <= 365.25, !is.na(weight)) %>%
+  dplyr::summarise(first_year_weight = dplyr::n())
+
+# Second year weight observations (> 365.25 days & <= 730.5 days)
+weight_second_year <- anthropometry %>%
+  filter(time_days > 365.25 & time_days <= 730.5, !is.na(weight)) %>%
+  dplyr::summarise(second_year_weight = dplyr::n())
+
+# Print the results for height and weight observations by year
+cat("First year height observations:", height_first_year$first_year_height, "\n")
+cat("Second year height observations:", height_second_year$second_year_height, "\n")
+cat("First year weight observations:", weight_first_year$first_year_weight, "\n")
+cat("Second year weight observations:", weight_second_year$second_year_weight, "\n")
+```
+
+Comparison of Frequencies:
+There are more than double weight observations than height for both first and second year.
+
+Possible reason:
+There are more weight observations compared to the height, which change slowly. As a result, the effect can be reflected more quick in weight, which fluctuate frequently and is suitable for a short term intervenction study. 
+
+
