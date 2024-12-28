@@ -1,0 +1,258 @@
+---
+title: "hw4"
+author: "yang an"
+date: "`r Sys.Date()`"
+output: html_document
+---
+## question
+###answer:
+Homework 4
+```{r, echo=FALSE}
+
+# Load the data 
+setwd('/Users/yangan/Desktop/M236/M236-Lab/hw4')
+
+options(scipen = 999)
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(lme4)
+
+# Load the Dental data
+dental_data <- read.table("Dental.txt", header = TRUE, sep = "\t")
+```
+####1.
+# (a)
+```{r, echo=FALSE}
+Xi_a <- matrix(1, nrow = 8, ncol = 1)  # 4 observations each for boy and girl
+Xi_a
+```
+# (b)
+```{r, echo=FALSE}
+Xi_b <- matrix(c(1, 0, 1, 0, 1, 0, 1, 0,  # Boy's data
+                 1, 1, 1, 1, 1, 1, 1, 1), # Girl's data
+               nrow = 8, byrow = TRUE)
+Xi_b
+```
+# (c)
+```{r, echo=FALSE}
+times <- c(8, 10, 12, 14)  # Same times for both boy and girl
+Xi_c <- rbind(cbind(1, times), cbind(1, times))  # Combine both individuals
+Xi_c
+```
+# (d)
+```{r, echo=FALSE}
+Xi_d <- rbind(
+  cbind(1, times, 0),  # Boy's data (sex = 0)
+  cbind(1, times, 1)   # Girl's data (sex = 1)
+)
+Xi_d
+```
+# (e)
+```{r, echo=FALSE}
+times <- c(8, 10, 12)  # Adjusted times
+Xi_e <- rbind(
+  cbind(1, times, 0),  # Boy's data
+  cbind(1, times, 1)   # Girl's data
+)
+Xi_e
+```
+# (f)
+```{r, echo=FALSE}
+Xi_f <- rbind(
+  cbind(1, times, 0, times^2, 0),  # Boy's data
+  cbind(1, times, 1, times^2, 1)   # Girl's data
+)
+Xi_f
+```
+# (g)
+
+We can use the same quadratic time trend as the baseline model, compare it with alternative models, and evaluate the significance of any improvement in fit and alignment with the data.
+
+#####(h) 
+```{r, echo=FALSE}
+# Fit the models
+# Load the package
+library(lme4)
+
+# (1a) No time trend, no gender effect
+model_1a <- lmer(distance ~ 1 + (1 | id), data = dental_data)
+
+# (1b) Different level by gender, no time trend
+model_1b <- lmer(distance ~ gender + (1 | id), data = dental_data)
+
+# (1c) Time trend, same for both groups
+model_1c <- lmer(distance ~ age + (1 | id), data = dental_data)
+
+# (1d) Time trend different for each group
+model_1d <- lmer(distance ~ age * gender + (1 | id), data = dental_data)
+
+# Summary of models
+summary(model_1a)
+summary(model_1b)
+summary(model_1c)
+summary(model_1d)
+```
+#####(i) 
+1.(Intercept) (Estimate = 16.3406):
+This is the estimated starting value (baseline distance) for males when age is 0. The average distance for males is 16.34 mm when age equal to 0.
+
+2.age (Estimate = 0.7844):
+
+This represents the average increase in distance per year of age for males (the reference gender). The distance increases by 0.784 mm per year for males.
+
+3.genderGirl (Estimate = 1.0321):
+
+This is the estimated difference in the baseline distance between females and males when age is 0.  Females is 1.032 mm greater than males when age is 0.
+
+4.age:genderGirl
+(Estimate = -0.3048):
+This is the interaction term between age and gender (specifically for females), representing the difference in the slope of age for females compared to males. The slope of age for females is 0.3048 mm less than that for males.  Females have a slightly lower slope of 0.784−0.3048≈0.479 mm per year while males have a slope of approximately 0.784 mm per year.
+
+Summary of Fixed Effects
+Baseline (age 0): Males start at an average distance of 16.34 mm, while females start at a slightly higher distance of 17.37 mm (16.34 + 1.032).
+Time trend (slope): Males increase by 0.784 mm per year, while females increase by approximately 0.479 mm per year, indicating a smaller rate of increase in distance for females.
+####2. 
+#####(a) 
+```{r, echo=FALSE}
+Xi_unstructured_1 <- matrix(c(1, 0, 0, 0, 0,
+                              1, 1, 0, 0, 0,
+                              1, 1, 1, 0, 0,
+                              1, 1, 1, 1, 0,
+                              1, 1, 1, 1, 1), byrow = TRUE, ncol = 5)
+Xi_unstructured_1
+```
+#####(b)
+
+```{r, echo=FALSE}
+Xi_unstructured_2 <- diag(5)
+Xi_unstructured_2
+```
+
+#####(c) 
+Five columns in both parts.
+#####(d) 
+In the first parametrization, each 𝛼𝑘represents the cumulative mean up to the k-th time. In the second, each 𝛼𝑘represents the mean for the k-th time point directly.
+
+####3. 
+#####(a) Fit each model separately. Report the fixed effects (regression output) results for all
+```{r, echo=FALSE}
+# Load necessary packages
+library(lme4)
+library(dplyr)
+
+# Fit the models
+model_1a <- lmer(distance ~ 1 + (1 | id), data = dental_data)
+model_1b <- lmer(distance ~ gender + (1 | id), data = dental_data)
+model_1c <- lmer(distance ~ gender + age + (1 | id), data = dental_data)
+model_1d <- lmer(distance ~ age * gender + (1 | id), data = dental_data)
+model_1f <- lmer(distance ~ age * gender + I(age^2) * gender + (1 | id), data = dental_data)
+
+# Function to extract summary information for fixed effects
+extract_fixed_effects <- function(model, model_name) {
+  summary_data <- summary(model)$coefficients
+  data.frame(
+    Model = model_name,
+    Term = rownames(summary_data),
+    Estimate = summary_data[, "Estimate"],
+    Std_Error = summary_data[, "Std. Error"],
+    t_value = summary_data[, "t value"],
+    stringsAsFactors = FALSE
+  )
+}
+
+# Extract fixed effects for each model
+model_1a_summary <- extract_fixed_effects(model_1a, "Model 1a")
+model_1b_summary <- extract_fixed_effects(model_1b, "Model 1b")
+model_1c_summary <- extract_fixed_effects(model_1c, "Model 1c")
+model_1d_summary <- extract_fixed_effects(model_1d, "Model 1d")
+model_1f_summary <- extract_fixed_effects(model_1f, "Model 1f")
+
+# Combine summaries into one table
+model_table <- bind_rows(model_1a_summary, model_1b_summary, model_1c_summary, model_1d_summary, model_1f_summary)
+
+# Display the table
+print(model_table)
+```
+
+
+
+#####(b) 
+```{r, echo=FALSE}
+# Extract AIC values for each model
+model_aic <- c(AIC(model_1a), AIC(model_1b), AIC(model_1c), AIC(model_1d), AIC(model_1f))
+
+# Find the model with the lowest AIC
+best_model <- which.min(model_aic)
+
+# Display the AIC values and best model
+print(model_aic)
+print(best_model)
+
+# Extract the best model
+best_model_summary <- extract_fixed_effects(get(paste0("model_1", letters[best_model])), paste0("Model 1", letters[best_model]))
+
+# Display the summary of the best model
+print(best_model_summary)
+
+```
+#####(c) 
+Model 1d strikes the ideal balance by effectively capturing the significant influence of gender, age, and their interactions on distance, while preserving simplicity and avoiding unnecessary complexity.
+
+#####(d) 
+H0: There is no effect of gender or age:gender on the response variable distance.
+```{r, echo=FALSE}
+# Perform an F-test for the joint significance
+anova(model_1c, model_1d)
+```
+The P-value of the F-test is less than 0.0006266<0.05, indicating that we reject the null hypothesis and conclude that both gender and the age:gender interaction are important predictors in the model.
+  
+####4.
+Draw an inference plot. Estimate the average response and its standard error for the boys and the girls at each time point and plot over time.
+Explain the difference between this inference plot and the empirical summary plot you drew for homework 3.
+```{r, echo=FALSE}
+# Load necessary packages
+library(lme4)
+library(ggplot2)
+library(dplyr)
+
+# Fit the model with age, gender, and interaction term
+model <- lmer(distance ~ age * gender + (1 | id), data = dental_data)
+
+# Use the original dataset for predictions, assuming all age-gender combinations are present
+dental_data$fit <- predict(model, re.form = NA, se.fit = TRUE)$fit
+dental_data$se.fit <- predict(model, re.form = NA, se.fit = TRUE)$se.fit
+
+# Plot using the original dataset
+ggplot(dental_data, aes(x = age, y = fit, color = gender, group = gender)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = fit - se.fit, ymax = fit + se.fit), width = 0.2) +
+  labs(title = "Inference Plot for Boys and Girls", x = "Age (Years)", y = "Predicted Distance (mm)") +
+  theme_minimal()
+
+
+```
+Both plots show the relationship between age and distance, but the inference plot includes the standard error of the predicted values, the confidence intervals is smaller than the empirical summary plot. The epirical summary plot shows the raw data points and the average distance at each time point, without any model assumptions, while the inference plot shows the predicted average distance with confidence intervals based on the model.
+
+####5. 
+#####(a) 
+The most complicated fixed effect model is one that includes all possible interactions：
+gender and age, gender and quadratic age. In addtion, the model also would include the gender 
+effects, time trend, and the quadratic time trend.
+#####(b) Fit the most complicated model:
+```{r, echo=FALSE}
+# Fit the most complex model
+model_complex <- lmer(distance ~ age + gender + I(age^2) + age:gender + I(age^2):gender + (1 | id), data = dental_data)
+summary(model_complex)
+```
+#####(c) Compare the two models using an F-test:
+H0: The simpler model(best from earlier) is sufficient, and adding the quadratic terms does not significantly improve the fit.
+H1: The complex model provides a significantly better fit to the model.
+```{r, echo=FALSE}
+# Perform an F-test to compare the two models
+anova(model_1d, model_complex)
+```
+The P-value is 0.4906>0.05, we cannot reject the h0 and conclude that there is no significant impact to improve the model by adding the quadratic terms. Therefore, the simpler model is sufficient and should be preferred over the more complex model.
+
