@@ -1,0 +1,345 @@
+---
+title: "hw5"
+author: "yang an"
+date: "`r Sys.Date()`"
+output: html_document
+---
+## question
+
+###answer:
+Homework 5
+```{r, echo=FALSE}
+
+# Load the data 
+setwd('/Users/yangan/Desktop/M236/M236-Lab/hw5')
+
+options(scipen = 999)
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(lme4)
+library(nlme)
+# Load the Dental data
+dental_data <- read.table("Dental.txt", header = TRUE, sep = "\t")
+```
+
+####1.
+#####(a)
+```{r, echo=FALSE}
+
+# Define the fixed effects formula
+fixed_formula <- distance ~ age * gender
+
+# Fit different covariance models
+models <- list()
+
+# 1. Independence (ID)
+models[['Independence']] <- gls(fixed_formula, data = dental_data, correlation = corIdent(form = ~1 | id))
+
+# 2. Compound Symmetry (CS)
+models[['Compound Symmetry']] <- gls(fixed_formula, data = dental_data, correlation = corCompSymm(form = ~1 | id))
+
+# 3. AR-1 (Autoregressive 1)
+models[['AR-1']] <- gls(fixed_formula, data = dental_data, correlation = corAR1(form = ~1 | id))
+
+# 4. Heterogeneous AR-1 (HAR-1)
+models[['Heterogeneous AR-1']] <- gls(fixed_formula, data = dental_data, 
+                                      correlation = corAR1(form = ~1 | id), 
+                                      weights = varIdent(form = ~1 | id))
+
+# 5. Toeplitz (TOEP)
+models[['Toeplitz']] <- gls(fixed_formula, data = dental_data, 
+                            correlation = corARMA(form = ~1 | id, p = 2, q = 0))
+
+# 6. Diagonal (DIAG)
+models[['Diagonal']] <- gls(fixed_formula, data = dental_data, 
+                            weights = varIdent(form = ~1 | id))
+
+# 7. Unstructured (UN)
+models[['Unstructured']] <- gls(fixed_formula, data = dental_data, 
+                                 correlation = corSymm(form = ~1 | id))
+
+# 8. Diagonal Banded (DB)
+models[['Diagonal Banded']] <- gls(fixed_formula, data = dental_data, 
+                                   correlation = corARMA(form = ~1 | id, p = 1, q = 0))
+
+# 9. CS with Heterogeneous Variances (CS-H)
+models[['CS with Heterogeneous Variances']] <- gls(fixed_formula, data = dental_data, 
+                                                   correlation = corCompSymm(form = ~1 | id), 
+                                                   weights = varIdent(form = ~1 | id))
+
+# 10. Unstructured within-group correlation (UN-WG)
+models[['Unstructured within-group']] <- lme(fixed_formula, random = ~1 | id, data = dental_data, 
+                                             correlation = corSymm(form = ~1 | id))
+
+# Collect model summaries into a data frame
+results <- data.frame(
+  Model = names(models),
+  Parameters = sapply(models, function(m) length(coef(m))),
+  Neg2LogLik = sapply(models, function(m) -2 * logLik(m)),
+  AIC = sapply(models, AIC),
+  BIC = sapply(models, BIC)
+)
+
+# Perform likelihood ratio tests
+independence_model <- models[['Independence']]
+unstructured_model <- models[['Unstructured']]
+
+lrt_results <- data.frame(
+  Model = character(),
+  LRT_Independence = numeric(),
+  DF_Independence = integer(),
+  P_Independence = numeric(),
+  LRT_Unstructured = numeric(),
+  DF_Unstructured = integer(),
+  P_Unstructured = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (name in names(models)) {
+  if (name != 'Independence' && name != 'Unstructured') {
+    current_model <- models[[name]]
+    
+    # LRT against Independence model
+    lrt_independence <- anova(independence_model, current_model)
+    lrt_unstructured <- anova(current_model, unstructured_model)
+    
+    lrt_results <- rbind(lrt_results, data.frame(
+      Model = name,
+      LRT_Independence = lrt_independence$`L.Ratio`[2],
+      DF_Independence = lrt_independence$`df`[2] - lrt_independence$`df`[1],
+      P_Independence = lrt_independence$`p-value`[2],
+      LRT_Unstructured = lrt_unstructured$`L.Ratio`[2],
+      DF_Unstructured = lrt_unstructured$`df`[2] - lrt_unstructured$`df`[1],
+      P_Unstructured = lrt_unstructured$`p-value`[2]
+    ))
+  }
+}
+
+# Display results
+print(results)
+print(lrt_results)
+
+```
+
+#####(b)
+CS with Heterogeneous Variances fits best. The model has the lowest AIC values(443.82), indicating that it provides the best balance between model fit and complexity. In addition, it significantly improves the fit compared to the Independence model (p < 0.001). 
+
+All models significantly improve the fit compared to the Independence model (p < 0.001), demonstrating that the covariance structure is important in this data set.
+
+Compound symmetry and toeplitz models do not significantly improve the fit compared to the unstructured model (p > 0.05), suggesting that they offer comparable fit with few parameters.
+CS with Heterogeneous Variances differ significantly from the unstructured model (p < 0.001), indicating that the it can provide additional flexibility and better fit.
+
+As a result, the CS with Heterogeneous Variances model is the best choice for this data set, as it balances flexibility and interpretability with strong statistical performance.
+
+####2.
+#####(a)
+yes, more general model are below:
+1. Full Unstructured Covariance Model: This model allows for all possible correlations between the repeated measures. It is the most general model and has the highest number of parameters.
+While this model is highly flexible, it is also the most complex and may be prone to overfitting.
+2.Block Diagonal Covariance Model: This model allows for different covariance structures within each block of the data. It is more general than the compound symmetry model, but less general than the full unstructured model. This model can capture more complex patterns of correlation while still maintaining some structure and interpretability.
+3. Nonlinear Covariance Model: This model allows for nonlinear relationships between time points and covariance, such as Gaussian Process covariance structures.
+4.Mixed Effects Covariance Model: This model allows for both fixed and random effects in the covariance structure. It can capture individual differences in the correlation patterns, while also modeling the average correlation across all subjects.
+
+#####(b)
+The most compalicated covariance model would be the Full Unstructured Covariance Model, as it allows for all possible correlations between the repeated measures. It can seperate covariance matrices for boys and girls and for all time points. This model has the highest number of parameters and is the most flexible, but may be prone to overfitting due to its complexity.
+
+#####(c)
+```{r, echo=FALSE}
+# Split the data by gender
+boys_data <- dental_data %>% filter(gender == "Boy")
+girls_data <- dental_data %>% filter(gender == "Girl")
+
+# Fit unstructured covariance models for boys and girls
+boys_model <- gls(distance ~ age, data = boys_data, correlation = corSymm(form = ~1 | id))
+girls_model <- gls(distance ~ age, data = girls_data, correlation = corSymm(form = ~1 | id))
+
+# Extract correlation matrices for boys and girls
+boys_corr <- corMatrix(boys_model$modelStruct$corStruct) # Extract as a list
+girls_corr <- corMatrix(girls_model$modelStruct$corStruct) # Extract as a list
+
+# Convert correlation matrices to numeric for easier manipulation
+boys_corr_matrix <- as.matrix(boys_corr[[1]])  # Use the first element for boys
+girls_corr_matrix <- as.matrix(girls_corr[[1]])  # Use the first element for girls
+
+# Extract variances (use diagonal elements of the residual variance)
+boys_var <- diag(boys_corr_matrix) * var(residuals(boys_model))
+girls_var <- diag(girls_corr_matrix) * var(residuals(girls_model))
+
+# Output results
+list(
+  Boys_Correlations = boys_corr_matrix,
+  Boys_Variances = boys_var,
+  Girls_Correlations = girls_corr_matrix,
+  Girls_Variances = girls_var
+)
+
+```
+There is a stronger correlation between age and distance for girls compared to boys at different points in time, indicating the pattern of growth is more consistent for girls. However, the variances of boys(5.30) are higher than girls(4.57), indicating that there is more variability in the distance measurements for boys.
+
+#####(d)
+
+```{r, echo=FALSE}
+library(nlme)
+
+# Fit the RI model
+ri_model <- lme(
+  fixed = distance ~ age + gender + age:gender,
+  random = ~1 | id,  # Random intercept for each individual
+  data = dental_data
+)
+
+# Fit the CS model
+cs_model <- lme(
+  fixed = distance ~ age + gender + age:gender,
+  random = ~1 | id,  # Random intercept
+  correlation = corCompSymm(form = ~1 | id),  # Compound symmetry structure
+  data = dental_data
+)
+
+# Summarize the models
+summary(ri_model)
+summary(cs_model)
+
+# Compare the models using AIC and BIC
+aic_bic_comparison <- data.frame(
+  Model = c("RI", "CS"),
+  AIC = c(AIC(ri_model), AIC(cs_model)),
+  BIC = c(BIC(ri_model), BIC(cs_model))
+)
+
+print(aic_bic_comparison)
+```
+RI:Each individual has a random intercept, but no assumption is made about the within-individual correlation structure. 
+CS:This model assumes that the correlation between time points is the same for all individuals. It is a simplification of the RI model, where the correlation is assumed to be constant across all individuals.
+The RI model fits the data better than the CS model, as indicated by the lower AIC (445.76) and BIC (461.62) values. This suggests that the random intercept model provides a better balance between model fit and complexity compared to the compound symmetry model. The assumption of constant correlation across time points may not hold in this data set, leading to a better fit with the random intercept model.
+
+#####(e)
+```{r, echo=FALSE}
+library(nlme)
+
+# Fit single covariance model for all participants
+single_model <- gls(
+  distance ~ age * gender,
+  data = dental_data,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+# Split the data by gender
+boys_data <- subset(dental_data, gender == "Boy")
+girls_data <- subset(dental_data, gender == "Girl")
+
+# Fit separate covariance models for boys and girls
+boys_model <- gls(
+  distance ~ age,
+  data = boys_data,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+girls_model <- gls(
+  distance ~ age,
+  data = girls_data,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+# Calculate combined log-likelihood for separate models
+combined_logLik <- logLik(boys_model) + logLik(girls_model)
+
+# Perform likelihood ratio test
+lrt <- -2 * (logLik(single_model) - combined_logLik)
+df <- attr(logLik(boys_model), "df") + attr(logLik(girls_model), "df") - attr(logLik(single_model), "df")
+p_value <- pchisq(lrt, df, lower.tail = FALSE)
+
+# Output results
+cat("LRT statistic:", lrt, "\nDegrees of Freedom:", df, "\nP-value:", p_value, "\n")
+```
+Null Hypothesis: The separate models fits the data as well as the single model.
+Alternative Hypothesis: The separate models fits the data better than the single model.
+Decision: Reject the null hypothesis since the p-value is 0.003 less than 0.05.
+Conclusion: The separate covariance models for boys and girls fit significantly better than a single covariance model for all participants, indicating that boys and girls exhibit distinct variance-covariance structure are better captured by separate models.
+#####(f)
+```{r, echo=FALSE}
+
+
+# Load required libraries
+library(nlme)
+
+# Load the dataset
+dental_data <- read.table("Dental.txt", header = TRUE, sep = "\t")
+
+# Fit the single combined model
+single_model <- gls(
+  distance ~ age,
+  data = dental_data,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+# Calculate standardized residuals and identify outliers
+residuals_standardized <- residuals(single_model, type = "normalized")  # Use normalized residuals
+dental_data$std_residuals <- residuals_standardized  # Add residuals to dataset
+
+# Define outlier threshold
+threshold <- 3  # Outliers are defined as |residual| > 3
+outliers <- which(abs(dental_data$std_residuals) > threshold)
+cat("Number of outliers identified:", length(outliers), "\n")
+
+# Remove outliers from the data
+dental_data_clean <- dental_data[-outliers, ]
+
+# Re-fit the single combined model on cleaned data
+single_model_clean <- gls(
+  distance ~ age,
+  data = dental_data_clean,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+# Split cleaned data by gender
+boys_data_clean <- subset(dental_data_clean, gender == "Boy")
+girls_data_clean <- subset(dental_data_clean, gender == "Girl")
+
+# Refit separate models for boys and girls on cleaned data
+boys_model_clean <- gls(
+  distance ~ age,
+  data = boys_data_clean,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+girls_model_clean <- gls(
+  distance ~ age,
+  data = girls_data_clean,
+  correlation = corSymm(form = ~ 1 | id)
+)
+
+# Combine log-likelihoods for separate models
+combined_logLik_clean <- logLik(boys_model_clean)[1] + logLik(girls_model_clean)[1]
+
+# Perform likelihood ratio test
+lrt_clean <- -2 * (logLik(single_model_clean)[1] - combined_logLik_clean)
+df_clean <- (length(coef(boys_model_clean)) + length(coef(girls_model_clean))) - length(coef(single_model_clean))
+p_value_clean <- pchisq(lrt_clean, df_clean, lower.tail = FALSE)
+
+# Output results
+cat("Likelihood Ratio Test (Cleaned Data):\n")
+cat("LRT Statistic:", lrt_clean, "\nDegrees of Freedom:", df_clean, "\nP-value:", p_value_clean, "\n")
+
+# Recalculate and compare AIC/BIC
+aic_single_clean <- AIC(single_model_clean)
+bic_single_clean <- BIC(single_model_clean)
+
+combined_params_clean <- length(coef(boys_model_clean)) + length(coef(girls_model_clean))
+aic_combined_clean <- -2 * combined_logLik_clean + 2 * combined_params_clean
+bic_combined_clean <- -2 * combined_logLik_clean + log(nrow(dental_data_clean)) * combined_params_clean
+
+cat("\nAIC and BIC Comparison (Cleaned Data):\n")
+cat("AIC (Single Model):", aic_single_clean, "\nAIC (Separate Models):", aic_combined_clean, "\n")
+cat("BIC (Single Model):", bic_single_clean, "\nBIC (Separate Models):", bic_combined_clean, "\n")
+
+```
+
+Conclusion: After removing outliers, the AIC(387.58) and BIC(398.27) values for the separate models are lower than the single model AIC(423.57) and BIC(447.46), indicating that the separate models provide a better fit to the data. Therefore, the separate covariance models for boys and girls fit better than a single covariance model. In addition, P-value is lower (0.000002270614) which suggests that the presence of outliers may have influenced the results of the likelihood ratio test, highlighting the importance of identifying and addressing outliers in the data analysis process. 
+
+####3.
+In analyzing the dental data, we first examined growth trends using graphical analysis, fixed effects, and covariance modeling. Initial graphical analysis revealed distinct growth trajectories in dental measurements over time for boys and girls. Boys displayed more variability in their growth trajectories compared to girls, suggesting differences in the underlying variance-covariance structures. In addition, there also have a outlier after did the scatterplot, which suggesting we should consider the effect of outliers in the covariance analysis.  In the fixed effects analysis, significant interactions between age and gender (p < 0.05) indicated that the growth rates differed by gender, with boys having steeper increases in dental measurements with age. Additionally, these results were supported by visualization of model fits overlaid on empirical data, showcasing the alignment of predicted growth patterns with observed values.
+
+For covariance modeling, various structures were tested, including independence, compound symmetry (CS), autoregressive (AR-1), and unstructured (UN) models. Likelihood ratio tests showed that the CS with heterogeneous variances model fit significantly better than the independence model (p < 0.001) but was not superior to the unstructured model when comparing AIC and BIC. Importantly, separate covariance structures for boys and girls were tested, and the results revealed a significant improvement in model fit (p = 0.003), indicating that the genders have distinct covariance structures. However, when outliers were removed, this difference was no longer statistically significant (p = 0.087). The variances for boys (5.30) were higher than for girls (4.57), and correlations were also stronger among girls’ measurements, reflecting greater consistency in their growth trajectories. These findings underscore the importance of accounting for gender-specific growth patterns in modeling dental data for more precise predictions and insights.
